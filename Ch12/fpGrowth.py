@@ -10,6 +10,10 @@ find association rules.
 
 @author: Peter
 '''
+
+# time measurement
+from timeit import default_timer as timer
+
 class treeNode:
     def __init__(self, nameValue, numOccur, parentNode):
         self.name = nameValue
@@ -22,7 +26,7 @@ class treeNode:
         self.count += numOccur
         
     def disp(self, ind=1):
-        print '  '*ind, self.name, ' ', self.count
+        print("{}{} {}".format('  '*ind, self.name, self.count))
         for child in self.children.values():
             child.disp(ind+1)
 
@@ -32,7 +36,7 @@ def createTree(dataSet, minSup=1): #create FP-tree from dataset but don't mine
     for trans in dataSet:#first pass counts frequency of occurance
         for item in trans:
             headerTable[item] = headerTable.get(item, 0) + dataSet[trans]
-    for k in headerTable.keys():  #remove items not meeting minSup
+    for k in headerTable.copy().keys():  #remove items not meeting minSup
         if headerTable[k] < minSup: 
             del(headerTable[k])
     freqItemSet = set(headerTable.keys())
@@ -136,7 +140,7 @@ def getLotsOfTweets(searchStr):
     #you can get 1500 results 15 pages * 100 per page
     resultsPages = []
     for i in range(1,15):
-        print "fetching page %d" % i
+        print("fetching page {}".format(i))
         searchResults = api.GetSearch(searchStr, per_page=100, page=i)
         resultsPages.append(searchResults)
         sleep(6)
@@ -160,3 +164,34 @@ def mineTweets(tweetArr, minSup=5):
 #myFPtree.disp()
 #myFreqList = []
 #mineTree(myFPtree, myHeaderTab, minSup, set([]), myFreqList)
+
+def testWithPerformance():
+    """
+    load data from http://fimi.ua.ac.be/data/ with FP check.
+    """
+    import os 
+    # see https://stackoverflow.com/questions/5137497/find-current-directory-and-files-directory
+    # dir_path = os.path.dirname(os.path.realpath(__file__))
+    # FUCK visual code one run from the root level of resource
+    # print(os.getcwd())
+    parseDat = [line.split() for line in open("Ch12/kosarak.dat").readlines()]
+    print('total line of transcation: {}'.format(len(parseDat)))
+    # measure training time
+    start = timer()
+
+    initSet = createInitSet(parseDat)
+    minSupport = 100000
+    myFPtree, myHeaderTab = createTree(initSet, minSupport)
+    myFreqList = []
+    mineTree(myFPtree, myHeaderTab, minSupport, set([]), myFreqList)
+
+    end = timer()
+    print('Execution total time: {0:.3g} seconds'.format(end - start))
+    # result analysis
+    print(len(myFreqList))
+    print(myFreqList)
+
+
+if __name__ == '__main__':
+    # testWithBasic()
+    testWithPerformance()
