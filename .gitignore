@@ -1,0 +1,6 @@
+# python
+*.pyc
+
+# macosx cache
+._*
+.DS_Store
